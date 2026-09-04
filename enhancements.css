@@ -1,0 +1,25 @@
+.stage.beat {
+  animation: beat-pulse .24s steps(2);
+}
+
+@keyframes beat-pulse {
+  50% { box-shadow: inset 0 0 42px #ff3eaa88, 0 0 22px #36bdff; }
+}
+
+.download-button {
+  display: inline-block;
+  text-decoration: none;
+  font-size: clamp(9px, 2.8vw, 13px);
+  padding: 13px 15px;
+  margin: 10px 0 4px;
+  background: linear-gradient(#42c9ff, #4763de);
+  box-shadow: 0 0 0 5px #39217c, 0 7px 0 #170b48, 0 0 24px #36bdff;
+}
+
+.download-button:active {
+  box-shadow: 0 0 0 5px #39217c, 0 2px 0 #170b48;
+}
+
+@media (max-height: 680px) {
+  .download-button { margin-top: 5px; padding: 10px 12px; }
+}
