@@ -17,6 +17,7 @@ const music = new Audio('assets/corazon-vacio-8bit.mp3');
 music.preload = 'auto';
 music.loop = true;
 music.playsInline = true;
+music.volume = .72;
 
 let level = 1;
 let score = 0;
@@ -102,7 +103,13 @@ function playMusic() {
   if (muted) return;
   music.muted = false;
   const promise = music.play();
-  if (promise) promise.then(alignNextBeat).catch(() => toast('TOCÁ ♫ PARA ACTIVAR'));
+  if (promise) promise.then(() => {
+    alignNextBeat();
+    $('#sound').textContent = '♫';
+  }).catch(() => {
+    $('#sound').textContent = '▶';
+    toast('TOCÁ ▶ PARA ACTIVAR');
+  });
 }
 
 function pauseMusic() {
@@ -187,7 +194,6 @@ function hit(item) {
   if (lives <= 0) {
     running = false;
     clearItems();
-    pauseMusic();
     setTimeout(() => {
       lives = 3;
       combo = 1;
@@ -197,7 +203,6 @@ function hit(item) {
       running = true;
       last = performance.now();
       alignNextBeat();
-      playMusic();
       requestAnimationFrame(loop);
     }, 900);
   } else if (progress >= configs[level - 1].goal) {
@@ -308,12 +313,57 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowRight') movePlayer(lane + 1);
 });
 
-const download = document.createElement('a');
+const download = document.createElement('button');
 download.className = 'pixel-button download-button';
-download.href = 'assets/wallpaper-valentina.png';
-download.download = 'Wallpaper-Valentina-8-anos.png';
-download.textContent = 'DESCARGAR WALLPAPER';
+download.type = 'button';
+download.textContent = 'GUARDAR WALLPAPER';
 screens.celebration.insertBefore(download, $('#celebrate-again'));
+
+async function saveWallpaper() {
+  const url = 'assets/wallpaper-valentina-v2.png';
+  const filename = 'Mis-8-anos-Valentina-Wallpaper.png';
+  download.disabled = true;
+  download.textContent = 'PREPARANDO...';
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error('wallpaper');
+    const blob = await response.blob();
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Mis 8 años, Valentina' });
+    } else {
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    }
+    download.textContent = '¡WALLPAPER LISTO!';
+  } catch (error) {
+    if (error?.name !== 'AbortError') {
+      window.open(url, '_blank');
+      download.textContent = 'MANTENÉ APRETADO PARA GUARDAR';
+    } else {
+      download.textContent = 'GUARDAR WALLPAPER';
+    }
+  } finally {
+    download.disabled = false;
+  }
+}
+
+download.addEventListener('click', saveWallpaper);
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (event) => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 320) event.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+document.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (event) => event.preventDefault(), { passive: false });
 
 $('#play').onclick = startGame;
 $('#again').onclick = startGame;
@@ -332,3 +382,11 @@ $('#sound').onclick = () => {
   }
   $('#sound').textContent = muted ? '×' : '♫';
 };
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (!music.paused) music.pause();
+  } else if (running && !muted) {
+    playMusic();
+  }
+});

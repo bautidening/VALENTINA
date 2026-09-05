@@ -16,6 +16,18 @@
   box-shadow: 0 0 0 5px #39217c, 0 7px 0 #170b48, 0 0 24px #36bdff;
 }
 
+button, a, .stage {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.download-button:disabled {
+  opacity: .72;
+  pointer-events: none;
+}
+
 .download-button:active {
   box-shadow: 0 0 0 5px #39217c, 0 2px 0 #170b48;
 }
